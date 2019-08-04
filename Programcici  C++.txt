@@ -1,0 +1,116 @@
+#include <iostream>
+using namespace std;
+
+void main()
+{
+	cout << "Hello World!"<<endl;
+	int var;
+	cin >> var;
+	cout << "Upisali ste: " << var << endl;
+	system("PAUSE");
+}
+
+
+
+
+
+
+
+#include <iostream>
+using namespace std;
+
+void main()
+{
+	int a = 10;
+	int b;
+	cout << "Pozdrav, unesite neki broj:" << endl;
+	cin >> b;
+	int c = 15;
+	int d = a + b + c;
+	cout << d << endl;
+	system("pause");
+}
+
+
+
+
+
+
+
+
+
+#include <iostream>
+using namespace std;
+void main()
+{
+	cout << "Ime: \t\t Ismet \n";
+	cout << "Prezime: \t Maksumic \n";
+	cout << "Zaposlen: \t FIT \n";
+}
+
+
+
+
+
+#include <iostream>
+using namespace std;
+
+void main()
+{
+	float r, h, P, V;
+	const float Pi = 3.14;
+	cout << "Unesite vrijednost poluprecnika r:";
+	cin >> r;
+	cout << "Unesite vrijednost visine h:";
+	cin >> h;
+	P = r*r*Pi;
+	V = P*h;
+	cout << "Povrsina cilindra iznosi:" << P << endl;
+	cout << "Zapremina cilindra iznosi:" << V << "m^3" << endl;
+	system("pause");
+}
+
+
+
+
+#include <iostream>
+using namespace std;
+
+void main()
+{	
+	char slovo;
+	cout << "Unesite malo slovo" << endl;
+	cin >> slovo;
+	(slovo >= 97) && (slovo <= 122) ? cout << char(slovo - 1) << "," << char(slovo) << "," << char(slovo + 1) : cout << "Niste unijelo malo slovo";
+	system("pause");}
+
+
+
+
+
+
+#include <iostream>
+using namespace std;
+
+void main()
+{	
+	int broj;	cout << "Unesite neki broj" << endl;
+	cin >> broj;	
+	(broj % 2 == 0) ? cout << "Broj je paran pa je rezultat broj na kradrat:" << broj*broj : cout << "Broj je neparan pa je rezultat broj na kub:" << broj*broj*broj;	
+	system("PAUSE");}
+
+
+
+void main()
+{
+int br;
+bool niz1, kontrola, niz2, zlatni;
+cout << "Unesite jedan broj: " << endl;
+cin >> br;	niz1 = (br >= 100) && (br <= 999);
+kontrola = (br >= 0) && (br % 2 != 0) && !niz1 && !(br % 7 == 0);	
+niz2 = (br >= -99) && (br <= -33);		
+zlatni = (br == 114) || niz2 || (br % 19 == 0);		
+if (kontrola || zlatni)			
+cout << "Broj je prihvacen \n";		
+else			
+cout << "Broj nije prihvacen \n";}

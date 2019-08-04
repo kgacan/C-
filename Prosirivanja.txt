@@ -1,0 +1,234 @@
+#include<iostream>
+#include<memory>
+using namespace std;
+
+struct Datum {
+	int* _dan;
+	int* _mjesec;
+	int* _godina;
+
+	void Unos(int d, int m, int g) {
+		_dan = new int(d);
+		_mjesec = new int(m);
+		_godina = new int(g);
+	}
+
+	void Ispis() {
+		cout << *_dan << ". " << *_mjesec << ". " << *_godina << "."<<endl;
+	}
+
+	void Dealociaj() {
+		delete _dan; _dan = nullptr;
+		delete _mjesec; _mjesec = nullptr;
+		delete _godina; _godina = nullptr;
+	}
+};
+
+struct Student {
+	char* _ime;
+	int _index;
+	Datum _datumRodjenja;
+
+	void Unos(char* ime, int index, Datum datum) {
+		_ime = new char[strlen(ime) + 1];
+		strcpy_s(_ime, strlen(ime) + 1, ime);
+		_index = index;
+		_datumRodjenja.Unos(*datum._dan, *datum._mjesec, *datum._godina);
+	}
+
+	void Ispis() {
+		cout << _ime << " " << _index << endl;
+		_datumRodjenja.Ispis();
+	}
+
+	void Dealociraj() {
+		delete[] _ime; _ime = nullptr;
+		_datumRodjenja.Dealociaj();
+	}
+
+
+};
+
+struct UcionicaNIZ {
+	Student* _studenti;
+	int _brojStudenata;
+
+	void Set() {
+		_studenti = nullptr;
+		_brojStudenata = 0;
+	}
+
+	void DodajStudenta(Student student) {
+
+		Student* pom = new Student[_brojStudenata];
+		for (int i = 0; i < _brojStudenata; i++) pom[i].Unos(_studenti[i]._ime, _studenti[i]._index, _studenti[i]._datumRodjenja);
+		for (int i = 0; i < _brojStudenata; i++) _studenti[i].Dealociraj();
+		delete[] _studenti;
+		_studenti = nullptr;
+		_studenti = new Student[_brojStudenata + 1];
+		for (int i = 0; i < _brojStudenata; i++) _studenti[i].Unos(pom[i]._ime, pom[i]._index, pom[i]._datumRodjenja);
+		for (int i = 0; i < _brojStudenata; i++) pom[i].Dealociraj();
+		delete[] pom;
+		pom = nullptr;
+		_studenti[_brojStudenata].Unos(student._ime, student._index, student._datumRodjenja);
+		_brojStudenata++;
+	}
+
+	void Ispis() {
+		for (int i = 0; i < _brojStudenata; i++) {
+			_studenti[i].Ispis(); 
+			cout << endl;
+		}
+	}
+
+	void Dealociraj() {
+		for (int i = 0; i < _brojStudenata; i++) _studenti[i].Dealociraj();
+		delete _studenti;
+		_studenti = nullptr;
+	}
+};
+
+struct UcionicaNIZpokazivaca {
+	Student** _studenti;
+	int _brojStudenata;
+
+	void Set() {
+		_studenti = nullptr;
+		_brojStudenata = 0;
+	}
+
+	void DodajStudenta(Student student){
+		Student** pom = new Student*[_brojStudenata];
+		for (int i = 0; i < _brojStudenata; i++) {
+			pom[i] = new Student;
+			pom[i]->Unos(_studenti[i]->_ime, _studenti[i]->_index, _studenti[i]->_datumRodjenja);
+		}
+
+		for (int i = 0; i < _brojStudenata; i++) _studenti[i]->Dealociraj();
+		delete[] _studenti;
+		_studenti = nullptr;
+		_studenti = new Student*[_brojStudenata + 1];
+
+		for (int i = 0; i < _brojStudenata; i++) {
+			_studenti[i] = new Student;
+			_studenti[i]->Unos(pom[i]->_ime, pom[i]->_index, pom[i]->_datumRodjenja);
+		}
+
+		for (int i = 0; i < _brojStudenata; i++) pom[i]->Dealociraj();
+		delete[] pom;
+		pom = nullptr;
+
+		_studenti[_brojStudenata] = new Student;
+		_studenti[_brojStudenata]->Unos(student._ime, student._index, student._datumRodjenja);
+		_brojStudenata++;	
+	}
+
+	void Ispis() {
+		for (int i = 0; i < _brojStudenata; i++) {
+			_studenti[i]->Ispis();
+			cout << endl;
+		}
+	}
+
+	void Dealociraj() {
+		for (int i = 0; i < _brojStudenata; i++) _studenti[i]->Dealociraj();
+		delete[] _studenti;
+		_studenti = nullptr;
+	}
+};
+
+struct SharedUcionica {
+	shared_ptr<Student> *_studenti;
+	int _brojStudenata;
+
+	void Set() {
+		_studenti = nullptr;
+		_brojStudenata = 0;
+	}
+
+	void DodajStudenta(Student student) {
+
+		shared_ptr<Student> *pom = new shared_ptr<Student>[_brojStudenata];
+		for (int i = 0; i < _brojStudenata; i++) {
+			pom[i] = make_shared<Student>();
+			pom[i]->Unos(_studenti[i]->_ime, _studenti[i]->_index, _studenti[i]->_datumRodjenja);
+		}
+
+		for (int i = 0; i < _brojStudenata; i++) _studenti[i] = nullptr;
+		_studenti = nullptr;
+
+		_studenti = new shared_ptr<Student>[_brojStudenata + 1];
+		for (int i = 0; i < _brojStudenata; i++) {
+			_studenti[i] = make_shared<Student>();
+			_studenti[i]->Unos(pom[i]->_ime, pom[i]->_index, pom[i]->_datumRodjenja);
+		}
+
+		for (int i = 0; i < _brojStudenata; i++) pom[i] = nullptr;
+		pom = nullptr;
+		
+		_studenti[_brojStudenata] = make_shared<Student>();
+		_studenti[_brojStudenata]->Unos(student._ime, student._index, student._datumRodjenja);
+		_brojStudenata++;	
+	}
+
+	void Ispis() {
+		for (int i = 0; i < _brojStudenata; i++) {
+			_studenti[i]->Ispis();
+			cout << endl;
+		}
+	}
+
+	void Dealociraj() {
+		for (int i = 0; i < _brojStudenata; i++) _studenti = nullptr;
+		_studenti = nullptr;
+	}
+		
+
+};
+
+
+int main() {
+
+	Datum datum, datum2, datum3;
+	datum.Unos(7, 8, 1996);
+	datum2.Unos(13, 3, 2000);
+	datum3.Unos(14, 6, 1997);
+
+	Student samir, mejrema, merjema;
+	samir.Unos("Samir", 160304, datum);
+	mejrema.Unos("Mejrema", 160305, datum2);
+	merjema.Unos("Merjema", 160306, datum3);
+
+
+	UcionicaNIZ ucionicaNiz;
+	ucionicaNiz.Set();
+	ucionicaNiz.DodajStudenta(samir);
+	ucionicaNiz.DodajStudenta(mejrema);
+	ucionicaNiz.DodajStudenta(merjema);
+	ucionicaNiz.Ispis();
+	ucionicaNiz.Dealociraj();
+
+	cout << "---------------------" << endl;
+
+	UcionicaNIZpokazivaca ucionicaNizPokazivaca;
+	ucionicaNizPokazivaca.Set();
+	ucionicaNizPokazivaca.DodajStudenta(samir);
+	ucionicaNizPokazivaca.DodajStudenta(mejrema);
+	ucionicaNizPokazivaca.DodajStudenta(merjema);
+	ucionicaNizPokazivaca.Ispis();
+	ucionicaNizPokazivaca.Dealociraj();
+
+	cout << "---------------------" << endl;
+
+	SharedUcionica sharedUcionica;
+	sharedUcionica.Set();
+	sharedUcionica.DodajStudenta(samir);
+	sharedUcionica.DodajStudenta(mejrema);
+	sharedUcionica.DodajStudenta(merjema);
+	sharedUcionica.Ispis();
+	sharedUcionica.Dealociraj();
+	cout << "---------------------" << endl;
+
+
+return 0;
+}

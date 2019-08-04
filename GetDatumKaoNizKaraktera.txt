@@ -1,0 +1,118 @@
+#include<iostream>
+#include<stdlib.h>
+using namespace std;
+
+
+struct DatumVrijeme {
+	int *_dan, *_mjesec, *_godina, *_sati, *_minuti;
+	void Unos(int dan = 1, int mjesec = 1, int godina = 2000, int sati = 0, int minuti = 0) {
+		_dan = new int(dan);
+		_mjesec = new int(mjesec);
+		_godina = new int(godina);
+		_sati = new int(sati);
+		_minuti = new int(minuti);
+	}
+	void Dealociraj() {
+		delete _dan; _dan = nullptr;
+		delete _mjesec; _mjesec = nullptr;
+		delete _godina; _godina = nullptr;
+		delete _sati; _sati = nullptr;
+		delete _minuti; _minuti = nullptr;
+	}
+	void Ispis() {
+		cout << *_dan << "." << *_mjesec << "." << *_godina << " " << *_sati << ":" << *_minuti << endl;
+	}
+
+	char* GetDatumKaoNizKaraktera() {
+		int pom;
+		int dan = 0, mjesec = 0, godina = 0, sat = 0, minut = 0;
+		int tacka1 = 1, tacka2 = 1, razmak = 1, dvotacka = 1;
+
+		pom = *_dan;
+		while (pom) {
+			dan++;
+			pom /= 10;
+		}
+
+		pom = *_mjesec;
+		while (pom) {
+			mjesec++;
+			pom /= 10;
+		}
+
+		pom = *_godina;
+		while (pom) {
+			godina++;
+			pom /= 10;
+		}
+
+		pom = *_sati;
+		while (pom) {
+			sat++;
+			pom /= 10;
+		}
+
+		pom = *_minuti;
+		while (pom) {
+			minut++;
+			pom /= 10;
+		}
+
+		
+		char cdan[3];
+		char cmjesec[3];
+		char cgodina[5];
+		char csati[3];
+		char cminute[3];
+		_itoa_s(*_dan, cdan, 3, 10);
+		_itoa_s(*_mjesec, cmjesec, 3, 10);
+		_itoa_s(*_godina, cgodina, 5, 10);
+
+		if (sat == 2) _itoa_s(*_sati, csati, 3, 10);
+		else {
+			_itoa_s(0, csati, 3, 10);
+			char pom[2];
+			_itoa_s(*_sati, pom, 2, 10);
+			strcat_s(csati, 3, pom);
+		}
+
+		if (minut == 2) _itoa_s(*_minuti, cminute, 3, 10);
+		else {
+			_itoa_s(0, cminute, 3, 10);
+			char pom[2];
+			_itoa_s(*_minuti, pom, 2, 10);
+			strcat_s(cminute, 3, pom);
+		}
+
+		int duzina = dan + tacka1 + mjesec + tacka2 + godina + razmak + 2 + dvotacka + 2 + 1;
+		
+		char* niz = new char[duzina];
+		_itoa_s(*_dan, niz, duzina, 10);
+		strcat_s(niz, duzina, ".");
+		strcat_s(niz, duzina, cmjesec);
+		strcat_s(niz, duzina, ".");
+		strcat_s(niz, duzina, cgodina);
+		strcat_s(niz, duzina, " ");
+		strcat_s(niz, duzina, csati);
+		strcat_s(niz, duzina, ":");
+		strcat_s(niz, duzina, cminute);
+
+		return niz;
+	}
+
+};
+
+
+
+int main() {
+
+	DatumVrijeme danas;
+	danas.Unos(9, 6, 2017, 10, 15);
+	cout<<danas.GetDatumKaoNizKaraktera()<<endl;
+
+	danas.Dealociraj();
+	danas.Unos(22, 12, 2016, 3, 2);
+	cout << danas.GetDatumKaoNizKaraktera() << endl;
+
+	return 0;
+}

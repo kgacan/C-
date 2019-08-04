@@ -1,0 +1,379 @@
+#include<iostream>
+#include<cstring>
+#include<memory> //potrebno za pametne pokazivace
+#include<functional> //ptrebno za "auto" kod lambda funckije
+using namespace std;
+
+#pragma warning(disable:4996)
+char *crt = "\n-------------------------------------------\n";
+
+enum eNacinStudiranja { REDOVAN, DL };
+enum eRazred { PRVI = 1, DRUGI, TRECI, CETVRTI };
+
+struct DatumVrijeme {
+	int *_dan, *_mjesec, *_godina, *_sati, *_minuti;
+	void Unos(int dan = 1, int mjesec = 1, int godina = 2000, int sati = 0, int minuti = 0) {
+		_dan = new int(dan);
+		_mjesec = new int(mjesec);
+		_godina = new int(godina);
+		_sati = new int(sati);
+		_minuti = new int(minuti);
+	}
+	void Dealociraj() {
+		delete _dan; _dan = nullptr;
+		delete _mjesec; _mjesec = nullptr;
+		delete _godina; _godina = nullptr;
+		delete _sati; _sati = nullptr;
+		delete _minuti; _minuti = nullptr;
+	}
+	void Ispis() {
+		cout << *_dan << "." << *_mjesec << "." << *_godina << " " << *_sati << ":" << *_minuti << endl;
+	}
+
+	char* GetDatumKaoNizKaraktera() {
+
+		int duzinaDan = 0, duzinaMjesec = 0, duzinaGodina = 0, duzinaSati = 0, duzinaMinuti = 0;
+		int tacka = 1, razmak = 1, dvotacka = 1, terminirajucaNula = 1; //duzine su nam potrebne da znamo velicinu char niza kojeg moramo alocirati
+
+		//trazimo duzinu (broj cifara) svakog broja
+		int pom = *_dan;
+		while (pom) {
+			duzinaDan++;
+			pom /= 10;
+		}
+		pom = *_mjesec;
+		while (pom) {
+			duzinaMjesec++;
+			pom /= 10;
+		}
+		pom = *_godina;
+		while (pom) {
+			duzinaGodina++;
+			pom /= 10;
+		}
+		pom = *_sati;
+		while (pom) {
+			duzinaSati++;
+			pom /= 10;
+		}
+		pom = *_minuti;
+		while (pom) {
+			duzinaMinuti++;
+			pom /= 10;
+		}
+
+		//smjestamo dan, mjesec i godinu u char niz, int pretvaramo u char[] _itoa_s funkcijom 
+		//velicine nizova moraju biti za jedan vece zbog \0
+		char charDan[3], charMjesec[3], charGodina[5], charSati[3], charMinuti[3];
+		_itoa_s(*_dan, charDan, 3, 10); //broj koji zelimo staviti u charNiz, mjesto gdje stavljamo broj, velicina char niza gdje stavljamo, brojni sistem u koji pretvaramo
+		_itoa_s(*_mjesec, charMjesec, 3, 10);
+		_itoa_s(*_godina, charGodina, 5, 10);
+
+		if (duzinaSati == 2) _itoa_s(*_sati, charSati, 3, 10); //ako je sat sastavljen od dvije cifre, samo taj broj pretvorimo u char niz
+		else { //ako nije
+			_itoa_s(0, charSati, 3, 10); //u char sate prvo stavljamo nulu
+			char pom[2]; //pravimo pomocin char niz u kojeg cemo smjestiti samo tu jenu cifru sati
+			_itoa_s(*_sati, pom, 2, 10); //pretvaramo tu cifru u char i stavaljamo u pomocni char niz
+			strcat_s(charSati, 3, pom); //i dodajemo je na nulu 
+		}
+
+		//identicno radimo za minute
+		if (duzinaMinuti == 2) _itoa_s(*_minuti, charMinuti, 3, 10);
+		else {
+			_itoa_s(0, charMinuti, 3, 10);
+			char pom[2];
+			_itoa_s(*_minuti, pom, 2, 10);
+			strcat_s(charMinuti, 3, pom);
+		}
+		
+		int velicina = duzinaDan + tacka + duzinaMjesec + tacka + duzinaGodina + razmak + duzinaSati + dvotacka + duzinaMinuti + terminirajucaNula;
+		char* niz = new char[velicina]; //alociramo niz velicine koju smo sracunali
+		strcpy_s(niz, velicina, charDan); //kopiramo dan, te dodajemo tacke, brojeve i razmake itd da kreiramo konazni niz
+		strcat_s(niz, velicina, ".");
+		strcat_s(niz, velicina, charMjesec);
+		strcat_s(niz, velicina, ".");
+		strcat_s(niz, velicina, charGodina);
+		strcat_s(niz, velicina, " ");
+		strcat_s(niz, velicina, charSati);
+		strcat_s(niz, velicina, ":");
+		strcat_s(niz, velicina, charMinuti);
+		return niz;
+	}
+
+
+};
+const DatumVrijeme rokZaPrijavu = { new int(5), new int(7), new int(2017), new int(12), new int(30) };
+
+struct Predmet {
+	char * _naziv;
+	int _ocjena;
+	DatumVrijeme * _datumUnosa;
+	void Unos(char * naziv, int ocjena, DatumVrijeme datumUnosa) {
+		int vel = strlen(naziv) + 1;
+		_naziv = new char[vel];
+		strcpy_s(_naziv, vel, naziv);
+		_ocjena = ocjena;
+		_datumUnosa = new DatumVrijeme;
+		_datumUnosa->Unos(*datumUnosa._dan, *datumUnosa._mjesec, *datumUnosa._godina, *datumUnosa._sati, *datumUnosa._minuti);
+	}
+	void Dealociraj() {
+		delete[] _naziv; _naziv = nullptr;
+		_datumUnosa->Dealociraj(); delete _datumUnosa; _datumUnosa = nullptr;
+	}
+
+	void Ispis() {
+		//kreirati funkciju GetDatumKaoNizKaraktera() koja vraca vrijednosti atributa strukture datum kao niz karaktera
+		cout << _naziv << " (" << _ocjena << ") "<< _datumUnosa->GetDatumKaoNizKaraktera() << endl;
+	}
+};
+
+struct Uspjeh {
+	eRazred _razred;
+	Predmet * _predmeti;
+	int _brojPredmeta;
+	void Unos(eRazred razred) {
+		_razred = razred;
+		_predmeti = nullptr;
+		_brojPredmeta = 0;
+	}
+	void Dealociraj() {
+		for (int i = 0; i < _brojPredmeta; i++)
+			_predmeti[i].Dealociraj();
+		delete[] _predmeti; _predmeti = nullptr;
+	}
+
+	void Ispis() {
+		cout << crt << "Razred -> " << _razred << crt;
+		for (int i = 0; i < _brojPredmeta; i++)
+			_predmeti[i].Ispis();
+	}
+
+	void DodajPredmet(Predmet predmet) {
+
+		//funckija koja dodaje predmet unutar uspjeha
+		//kandaidat ima 4 uspijeha (4 razreda), a svaki uspijeh ima niz predmeta u sebi
+		//ova funkcija ce zapravo dadavati predmete u razrede (uspjehe) kandidata
+		Predmet* pom = new Predmet[_brojPredmeta];
+		for (int i = 0; i < _brojPredmeta; i++) pom[i].Unos(_predmeti[i]._naziv, _predmeti[i]._ocjena, *_predmeti[i]._datumUnosa);
+		for (int i = 0; i < _brojPredmeta; i++) _predmeti[i].Dealociraj();
+		delete[] _predmeti;
+		_predmeti = nullptr;
+		_predmeti = new Predmet[_brojPredmeta + 1];
+		for (int i = 0; i < _brojPredmeta; i++) _predmeti[i].Unos(pom[i]._naziv, pom[i]._ocjena, *pom[i]._datumUnosa);
+		for (int i = 0; i < _brojPredmeta; i++) pom[i].Dealociraj();
+		delete[] pom;
+		pom = nullptr;
+		_predmeti[_brojPredmeta].Unos(predmet._naziv, predmet._ocjena, *predmet._datumUnosa);
+		_brojPredmeta++;
+	}
+
+};
+
+struct Kandidat {
+	eNacinStudiranja _nacinStudiranja;
+	char * _imePrezime;
+	shared_ptr<Uspjeh> _uspjeh[4];
+
+	void Unos(eNacinStudiranja nacinStudiranja, char * imePrezime) {
+		int vel = strlen(imePrezime) + 1;
+		_imePrezime = new char[vel];
+		strcpy_s(_imePrezime, vel, imePrezime);
+		_nacinStudiranja = nacinStudiranja;
+		for (int i = 0; i < 4; i++)
+			_uspjeh[i] = nullptr;
+	}
+	
+	void Dealociraj() {
+		delete[] _imePrezime; _imePrezime = nullptr;
+		for (int i = 0; i < 4; i++) if(_uspjeh[i]!=nullptr) _uspjeh[i]->Dealociraj();
+
+	}
+	
+	void Ispis() {
+		cout << crt << _imePrezime << " " << _nacinStudiranja;
+		for (int i = 0; i < 4; i++) if(_uspjeh[i]!=nullptr) _uspjeh[i]->Ispis();
+	}
+
+	bool DodajPredmet(eRazred razred, Predmet predmet) {
+
+		//ako razred nije definisan enumeracijom
+		if (razred != PRVI && razred != DRUGI && razred != TRECI && razred != CETVRTI) {
+			cout << "Zao nam je, razred nije definisan enumeracijom" << crt;
+			return false;
+		}
+		
+		//prvjera da li je datum predmeta prije roka prijave
+		bool predaoNaVrijeme=true;
+		if (*predmet._datumUnosa->_godina < *rokZaPrijavu._godina) predaoNaVrijeme = true;
+		if (*predmet._datumUnosa->_godina > *rokZaPrijavu._godina) predaoNaVrijeme = false;
+		if (*predmet._datumUnosa->_godina == *rokZaPrijavu._godina) {
+			if (*predmet._datumUnosa->_mjesec < *rokZaPrijavu._mjesec) predaoNaVrijeme = true;
+			if (*predmet._datumUnosa->_mjesec > *rokZaPrijavu._mjesec) predaoNaVrijeme = false;
+			if (*predmet._datumUnosa->_mjesec == *rokZaPrijavu._mjesec) {
+				if (*predmet._datumUnosa->_dan < *rokZaPrijavu._dan) predaoNaVrijeme = true;
+				if (*predmet._datumUnosa->_dan > *rokZaPrijavu._dan) predaoNaVrijeme = false;
+				if (*predmet._datumUnosa->_dan == *rokZaPrijavu._dan) {
+					if (*predmet._datumUnosa->_sati < *rokZaPrijavu._sati) predaoNaVrijeme = true;
+					if (*predmet._datumUnosa->_sati>* rokZaPrijavu._sati) predaoNaVrijeme = false;
+					if (*predmet._datumUnosa->_sati == *rokZaPrijavu._sati) {
+						if (*predmet._datumUnosa->_minuti < *rokZaPrijavu._minuti) predaoNaVrijeme = true;
+						if (*predmet._datumUnosa->_minuti > *rokZaPrijavu._minuti) predaoNaVrijeme = false;
+						if (*predmet._datumUnosa->_minuti == *rokZaPrijavu._minuti) predaoNaVrijeme = true;
+					}
+				}
+			}
+		}
+		if (!predaoNaVrijeme) { //ako nije predao na vrijeme
+			cout << "Zao nam je, rok za prijavu je istekao" << crt;
+			return false;
+		}
+
+
+		bool PronsaoIstiRazred=false; //trazimo da li vec postoji predmeta u razredu koji smo primili kao parametar, tj da li ima vec alociran uspijeh sa tim razredom
+		int index = 0; //ako pronadjemo uspijeh sa tim razredom, cuvamo njegov index
+		for (int i = 0; i < 4; i++) { //prolazimo kroz sva 4 uspijeha (koji su pokazivaci na uspijehe!)
+			if (_uspjeh[i] != nullptr && _uspjeh[i]->_razred == razred) { //ako pokazivac poakzuje na nesto, tj ima nesto alocirano na sebi ili ima predmeta u njemu, a pri tome je isti razred kao onaj sto je predan u parametrima
+				PronsaoIstiRazred = true; //znaci pronasli smo isti razred
+				index = i; //pamtimo index uspijeha koji sadrzi taj razred
+				break; //i mozemo napustiti petlju 
+			}
+		}
+		if (PronsaoIstiRazred) { //ako smo pronasli razred/uspijeh
+			for (int i = 0; i < _uspjeh[index]->_brojPredmeta; i++) {//proazimo kroz sve predmete tog uspijeha, ciji index sada znamo 
+				if (strcmp(predmet._naziv, _uspjeh[index]->_predmeti[i]._naziv) == 0) { //ako medju predmetima istog tog razreda nadjemo predmet koji trebamo dodati
+					cout << "U " << razred << ". razredu je vec dodan predmet: " << predmet._naziv << crt; //pisemo poruku da to ne mozemo raditi 
+					return false;
+				}
+			}
+		}
+
+		if (PronsaoIstiRazred) { //ako funcija i dalje ide, znaci mozemo dodati novi predmet u razred, te ako vec imamo tak razred
+			_uspjeh[index]->DodajPredmet(predmet); //samo u njega dodamo predmet
+			return true; //vratimo true
+		}
+		else { //ako nismo pronasli razred, moramo ga prvo kreirati 
+			for (int i = 0; i < 4; i++) { //prolazimo kroz sve pokazivace na uspijeh
+				if (_uspjeh[i] == nullptr) { //i trazimo prvi prazan, slobodan, da nema nista alocrano na njemu, nullptr, kako god 
+					_uspjeh[i] = make_shared<Uspjeh>(); //alociramo Uspijeh na prazan pokazivac (make_shared<Uspjeh> jeo kao new uspijeh)
+					_uspjeh[i]->Unos(razred); //unesemo, napravimo taj novi razred
+					_uspjeh[i]->DodajPredmet(predmet); //i u njega smjestimo predmet koji smo trebali 
+					return true;
+				}
+			}
+		}
+		return false;   //ovo return false je tu za svaki slucaj, ako nesto krene po zlu da vrati "nisam dodao predmet, nesto je poslo po zlu"
+	}
+
+};
+
+Kandidat* rekNajboljaOcjena(Kandidat* kandidati, int brojKandidata, char* imePredmeta, int setac, int najvecaOcjena, int indexKandidata) {
+
+	//bazni slucaj:
+	if (setac == brojKandidata) { //setac je index koji "seta" kroz kandidate, te kada dodje do koliko kandaidata ima, prekida se funkcija
+		Kandidat* pokazivac = &kandidati[indexKandidata]; //pokazivac koji uzima adresu kandidata koji je na pozicij koju smo pronasli
+		cout << "Kandidat sa najvecom ocjenom (" << najvecaOcjena << ") iz predmeta " << imePredmeta << " je: " << pokazivac->_imePrezime << endl;
+		return pokazivac;
+	}
+
+	for (int i = 0; i < 4; i++) { //svaki kandaitat ima 4 uspijeha, kandaidati[setac] ce biti redom kandidati[0], [1], setac se povecava rekurzijom
+		if (kandidati[setac]._uspjeh[i] != nullptr) { //ako nadjemo uspijeh koji ima nesto alocirano, tj koji pokazuje na nesto ili ima predmeta u sebi
+			for (int j = 0; j < kandidati[setac]._uspjeh[i]->_brojPredmeta; j++) { //pisemo petlju koja prolazi kroz sve predmete nadjenog uspijeha
+				if (strcmp(imePredmeta, kandidati[setac]._uspjeh[i]->_predmeti[j]._naziv) == 0) { //ako nadjemo predmet koji je predan kao parametar
+					if (kandidati[setac]._uspjeh[i]->_predmeti[j]._ocjena == najvecaOcjena) break; //ako mu je ocjena ista break, jer prva ostaje zapamcena
+					if (kandidati[setac]._uspjeh[i]->_predmeti[j]._ocjena > najvecaOcjena) { // ako je ocjena veca od najvece ocjene
+						najvecaOcjena = kandidati[setac]._uspjeh[i]->_predmeti[j]._ocjena; //najveca ocjena postaje ta ocjena
+						indexKandidata = setac; //pamtimo index kandidata gdje smo nasli tu ocjenu (setac je index kandidata)
+					}
+				}
+			}
+		}
+	}
+	setac++; //povecamo setac za jedan, da predjemo na sljedeceg kandidata
+	rekNajboljaOcjena(kandidati, brojKandidata, imePredmeta, setac, najvecaOcjena, indexKandidata);//ponovo pozivamo funkciju sa novo-popunjenim parametrima
+
+}
+
+
+int main() {
+
+	DatumVrijeme datum19062017_1015, datum20062017_1115, datum30062017_1215, datum05072017_1231;
+	datum19062017_1015.Unos(19, 6, 2017, 10, 15);
+	datum20062017_1115.Unos(20, 6, 2017, 11, 15);
+	datum30062017_1215.Unos(30, 6, 2017, 12, 15);
+	datum05072017_1231.Unos(5, 7, 2017, 12, 31);
+
+	cout << "Funkcija GetDatumKaoNizKaraktera: ";
+	cout << datum19062017_1015.GetDatumKaoNizKaraktera() << endl<<endl; //19.6.2017 10:15
+	
+	Predmet Matematika, Fizika, Hemija, Engleski;
+	Matematika.Unos("Matematika", 2, datum19062017_1015);
+	Fizika.Unos("Fizika", 5, datum20062017_1115);
+	Hemija.Unos("Hemija", 2, datum20062017_1115);
+	Engleski.Unos("Engleski", 5, datum05072017_1231);
+
+	int brojKandidata = 2;
+
+	Kandidat * prijave2017 = new Kandidat[brojKandidata];
+	prijave2017[0].Unos(DL, "Jasmin Azemovic");
+	prijave2017[1].Unos(REDOVAN, "Indira Hamulic");
+
+	cout << endl << "Unos predmeta:" << endl;
+	if (prijave2017[0].DodajPredmet(DRUGI, Engleski)) cout << "Predmet uspjesno dodan!" << crt; //ne
+	if (prijave2017[0].DodajPredmet(DRUGI, Matematika)) cout << "Predmet uspjesno dodan!" << crt;
+	if (prijave2017[0].DodajPredmet(PRVI, Fizika)) cout << "Predmet uspjesno dodan!" << crt;
+	if (prijave2017[0].DodajPredmet(PRVI, Hemija)) cout << "Predmet uspjesno dodan!" << crt;
+	
+	Matematika._ocjena = 5;
+	Hemija._ocjena = 3;
+
+	if (prijave2017[1].DodajPredmet(PRVI, Matematika)) cout << "Predmet uspjesno dodan!" << crt;
+	if (prijave2017[1].DodajPredmet(PRVI, Matematika)) cout << "Predmet uspjesno dodan!" << crt; //ne
+	if (prijave2017[1].DodajPredmet(TRECI, Hemija)) cout << "Predmet uspjesno dodan!" << crt;
+	if (prijave2017[1].DodajPredmet(DRUGI, Engleski)) cout << "Predmet uspjesno dodan!" << crt; //ne
+	cout << "Kraj unosa predmeta" << endl;
+
+	//lamda funkcija koja sa sobom enkapsulira (nosi sa sobom) orijave i broj kandidatat, nema parametre () te vraca pametni pokazivac na Uspijeh
+	auto najboljiUspjeh = [prijave2017, brojKandidata]()->shared_ptr<Uspjeh> { 
+
+		double najveciProsjek = 0; //cuvamo informaciju o najvecem prosjeku
+		int indexKandidata = 0; //cuvamo index kandidata koji ima taj prosjek
+		int indexUspijeha = 0; //cuvamo index uspijeha unutar kandidata 
+		for (int i = 0; i < brojKandidata; i++) { //prolazimo kroz sve kandidate
+			for (int j = 0; j < 4; j++) { //svaki kandidat ima 4 uspijeha
+				if (prijave2017[i]._uspjeh[j] != nullptr) { //ako uspijeh "pokazuje na nesto" odnosno nije nullptr
+					double prosjek = 0; //inicijalizujemo prosjek 
+					//saberemo sve occjene u nizu _predmeti, koji se nalazi u uspijehu koji smo nasli 
+					for (int k = 0; k < prijave2017[i]._uspjeh[j]->_brojPredmeta; k++) prosjek += prijave2017[i]._uspjeh[j]->_predmeti[k]._ocjena;
+					prosjek = double(prosjek) / prijave2017[i]._uspjeh[j]->_brojPredmeta; //prosjek je suma ocjena kroz broj predmeta 
+					if (prosjek == najveciProsjek) break; //ako neko prije vec ima isti prosjek, break, jer prvi prosjek treba da ostane sacuvan
+					if (prosjek > najveciProsjek) { //ako je novi prosjek veci od najveceg prosjeka
+						najveciProsjek = prosjek; //najveci prosjek postaje taj novi prosjek 
+						indexKandidata = i; //sacuvamo index od kandidata gdje smo nasli novi najveci prosjek (i)
+						indexUspijeha = j; // te sacuvamo index uspijeha u kandidatu pod indexom i (j)
+					}
+				}
+			}
+		}
+		if (najveciProsjek == 0) return nullptr; //ako nisamo nista nasli, prosjek ce ostati na nuli, te onda vracamo nullptr
+		//pametni pokazivac koji pokazuje na uspijeh koji se nalazi na nadjenoj poziciji unutar kanditata koji se nalazi na nadjenoj poziciji
+		shared_ptr<Uspjeh> pokazivac = prijave2017[indexKandidata]._uspjeh[indexUspijeha]; 
+		return pokazivac; //vracamo taj pokazivac
+	};
+
+	cout <<endl<<endl<< "Najbolji uspijeh po razredu pronadnjen LAMBDA funkcijom: ";
+	shared_ptr<Uspjeh> najbolji = najboljiUspjeh();
+	najbolji->Ispis();
+
+	cout << endl << "Rekurzivno pronadjen kandidat sa najboljom ocjenom iz proslijedjenog predmeta: " << endl;
+	rekNajboljaOcjena(prijave2017, brojKandidata, "Matematika", 0, 0, 0);
+
+	cout << endl << "Ispis i dealokacija svih kandidata, uspijeha i predmeta:" << endl;
+	for (int i = 0; i < brojKandidata; i++){
+		prijave2017[i].Ispis();
+		prijave2017[i].Dealociraj();
+	}
+	delete[] prijave2017;
+	prijave2017 = nullptr;
+	cout << endl;
+return 0;
+}
